@@ -74,6 +74,7 @@ func init() {
 }
 
 func main() {
+	fmt.Println("jianfeih debug")
 	go initTracing()
 	go initProfiling("productcatalogservice", "1.0.0")
 	flag.Parse()
