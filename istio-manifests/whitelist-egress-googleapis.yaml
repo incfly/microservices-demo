@@ -18,7 +18,7 @@ metadata:
   name: whitelist-egress-googleapis
 spec:
   hosts:
-  - "169.254.169.254" # GCE metadata server
+    # - "169.254.169.254" # GCE metadata server, not working because Istio disallows the hardcoded dns, https://github.com/istio/istio/blob/master/pilot/pkg/model/validation.go#L273
   - "metadata.google" # GCE metadata server
   - "metadata.google.internal" # GCE metadata server
   - "accounts.google.com" # Used to get token
