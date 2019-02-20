@@ -19,6 +19,9 @@ metadata:
 spec:
   template:
     metadata:
+      annotations:
+        # Workaround util figure out why Envoy/Istio makes app container not ready, redis reachability.
+        sidecar.istio.io/inject: "false"
       labels:
         app: cartservice
     spec:
