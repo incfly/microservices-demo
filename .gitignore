@@ -11,3 +11,5 @@ pkg/
 .kubernetes-manifests-*/
 istio-gce.sh
 tmp/
+*.pem
+cluster.env
