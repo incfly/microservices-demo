@@ -11,7 +11,7 @@
     ```bash
     export GCP_PROJECT="jianfeih-test"
     export GCP_ZONE="us-central1-a"
-    export CLUSTER_NAME="microservice-demo"
+    export GKE_NAME="microservice-demo"
     export GCE_NAME="hipster-productcatalog"
     bash ./istio-gce.sh setup
     ```
@@ -39,13 +39,13 @@
     # You may need to install Docker manuall with `gcloud compute ssh`
     bash istio-gce.sh gce_setup
     # Run the Docker with productservice
-    bash istio-gce.sh vm_exec docker run -d  -p 3550:3550 gcr.io/jianfeih-test/productcatalogservice:2f7240f
+    bash istio-gce.sh vm_exec sudo docker run -d  -p 3550:3550 gcr.io/jianfeih-test/productcatalogservice:2f7240f
     ```
 
 1.  Delete productcatalogservice from Kubernetes clusters.
 
     ```bash
-    skaffold delete --default-repo=gcr.io/jianfeih-test -f istio-gce/skaffold-product.yaml
+    skaffold delete --default-repo=gcr.io/jianfeih-test -f skaffold-product.yaml
     ```
 
     Now you should expect the product URL is not working.
@@ -58,8 +58,51 @@
 
 1.  Wait for a while and then check product page, it works again!
 
-1.  Cleanup
+## Migrate Redis to GCE
+
+1. Change `redis.yaml` service port name to TCP (already done in this branch).
+TODO: remove this workaround once https://github.com/istio/istio/issues/12139 is fixed.
+
+1. Create a GCE instance and set up Redis service on VM instance.
+
+    ```bash
+    export GCE_NAME="hipster-redis"
+    create_gce hipster-redis
+    bash ./isti-gce.sh gce_setup
+    # Install Docker manually
+    gcloud compute ssh $GCE_NAME
+    # Snippet from redis.yaml
+    sudo docker run -d  -p  6379:6379  redis:alpine
+    ```
+
+1. Delete Kubernetes Service `redis-cart`. Expected output from frontend `httpHandlers error`.
+
+1. TODO: here. Add service to the mesh.
+
+    ```bash
+    bash istio-gce.sh add_service redis-cart 6379  TCP
+    ```
+
+##  Cleanup
 
     ```bash
     bash ./istio-gce.sh cleanup
     ```
+
+## TODO Ideas
+
+- Use tracing to debug the micro service bug? Even helpful for this demo itself setup.
+
+
+## Debug Log
+
+1. Redis with sidecar not working.
+    Solution: mTLS disabled.
+    Reason: I worked on Istio mutual TLS and MySQL issue recently...
+
+1. How to disable sidecar injector.
+   Solution: look up the istio.io documentation. Annotation with deployment not working. Ask ayj@ instead.
+
+1. `ServiceEntry` redis-cart does not working.
+
+1. Leftover `ServiceEntry` does affect redis service discovery.
