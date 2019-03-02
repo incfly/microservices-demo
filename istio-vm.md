@@ -61,13 +61,14 @@
 ## Migrate Redis to GCE
 
 1. Change `redis.yaml` service port name to TCP (already done in this branch).
+
 TODO: remove this workaround once https://github.com/istio/istio/issues/12139 is fixed.
 
 1. Create a GCE instance and set up Redis service on VM instance.
 
     ```bash
-    export GCE_NAME="hipster-redis"
-    create_gce hipster-redis
+    export GCE_NAME="hipster-rediscart"
+    create_gce ${GCE_NAME}
     bash ./isti-gce.sh gce_setup
     # Install Docker manually
     gcloud compute ssh $GCE_NAME
@@ -77,13 +78,20 @@ TODO: remove this workaround once https://github.com/istio/istio/issues/12139 is
 
 1. Delete Kubernetes Service `redis-cart`. Expected output from frontend `httpHandlers error`.
 
-1. TODO: here. Add service to the mesh.
+    ```bash
+    kubectl delete -f kubernetes-manifests/redis.yaml
+    ```
+
+1. Add redis service on VM to the mesh.
 
     ```bash
+    # TODO: right now redis protocol does not work with Istio. We use TCP instead.
     bash istio-gce.sh add_service redis-cart 6379  TCP
     ```
 
-##  Cleanup
+1. Access frontend page, now the frontend page works again!
+
+## Cleanup
 
     ```bash
     bash ./istio-gce.sh cleanup
@@ -92,7 +100,6 @@ TODO: remove this workaround once https://github.com/istio/istio/issues/12139 is
 ## TODO Ideas
 
 - Use tracing to debug the micro service bug? Even helpful for this demo itself setup.
-
 
 ## Debug Log
 
