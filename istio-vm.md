@@ -23,29 +23,29 @@
 
     ```bash
     # Install Istio CRD first.
-    kubectl apply -f ./istio-manifests
+    kubectl apply -f ./releases/istio-manifests.yaml
 
     # Deploy basic microservice app.
-    skaffold run --default-repo=gcr.io/jianfeih-test -f skaffold-istio-gce.yaml
+    kubectl apply -f release/kubernetes-manifests.yaml
     ```
 
     Verify the app is up and running.
 
-1.  Deploy productcatalog service in the created GCE instance.
-
-    <!-- TODO: WIP, here, consolidate gce-vm.sh script and setup GCE instance. -->
+1. Deploy productcatalog service in the created GCE instance.
 
     ```bash
-    # You may need to install Docker manuall with `gcloud compute ssh`
-    bash istio-gce.sh gce_setup
-    # Run the Docker with productservice
-    bash istio-gce.sh vm_exec sudo docker run -d  -p 3550:3550 gcr.io/jianfeih-test/productcatalogservice:2f7240f
+    bash istio-gce.sh gce_setup 3550
+    go build src/productcatalogservice/server.go
+    gcloud compute scp server src/productcatalogservice/products.json $GCE_NAME:~
+    # Run the productcatalog service without Docker.
+    gcloud compute ssh ${GCE_NAME}
+    ./server 2>&1 > product.log &
     ```
 
-1.  Delete productcatalogservice from Kubernetes clusters.
+1. Delete productcatalogservice from Kubernetes clusters.
 
     ```bash
-    skaffold delete --default-repo=gcr.io/jianfeih-test -f skaffold-product.yaml
+    kc delete svc/productcatalogservice  deployment/productcatalogservice
     ```
 
     Now you should expect the product URL is not working.
@@ -57,6 +57,25 @@
     ```
 
 1.  Wait for a while and then check product page, it works again!
+
+## Enable mTLS Policy
+
+1. Now we try to enable mTLS between VM and Kubernetes workload.
+
+    ```bash
+    kubectl apply -f istio-gce/mtls.yaml
+    ```
+
+1. Open Grafana Dashboard, select the workload dashboard, and you will see the traffic changes from
+   mTLS.
+
+    ```bash
+    kubectl -n istio-system port-forward $(kubectl -n istio-system get pod -l app=grafana -o jsonpath='{.items[0].metadata.name}') 3000:3000 &
+    ```
+
+## Advanced Routing Between VM and Kubernetes
+
+## VM Services Call Kubernetes Service
 
 ## Migrate Redis to GCE
 
