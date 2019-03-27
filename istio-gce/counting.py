@@ -3,6 +3,7 @@
 from lxml import html
 import requests
 
+
 def send_request():
   page = requests.get('http://35.226.99.75/')
   tree = html.fromstring(page.content)
@@ -11,7 +12,7 @@ def send_request():
 
 vm = 0
 kubernetes = 0
-for i in xrange(3000):
+for i in xrange(3000000):
   products = send_request()
   if len(products) == 1:
     vm += 1

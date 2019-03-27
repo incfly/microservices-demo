@@ -75,6 +75,30 @@
 
 ## Advanced Routing Between VM and Kubernetes
 
+Now we add back the Kubernetes services.
+
+    ```bash
+    # Redeploy Kubernetes serivces
+    kubectl apply -f release/kubernetes-manifests.yaml
+    python istio-gce/count.py
+    ```
+
+At the beginning, without `VirtualService` defined, Envoy randomly selects an endpoints from two
+registries. The script prints out the result whether it hits VM or Kubernetes one.
+
+<!-- TODO: consider to do it by default if you manages it via `istioctl` -->
+
+Now let's simulate a traffic splitting to ramp up more on Kubernetes workload.
+
+    ```bash
+    kubectl apply -f istio-gce/product-dr-migration.yaml
+    # Run the counting script again.
+    python istio-gce/count.py
+    ```
+
+We should see the traffic have been shifting more to Kubernetes. We can even verify that in Grafana
+service dashboard.
+
 ## VM Services Call Kubernetes Service
 
 ## Migrate Redis to GCE
