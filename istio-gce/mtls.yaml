@@ -1,7 +1,7 @@
 apiVersion: "authentication.istio.io/v1alpha1"
 kind: "Policy"
 metadata:
-  name: "productcatalogservice-mtls-permissive"
+  name: "productcatalogservice-mtls-strict"
 spec:
   targets:
   - name: "productcatalogservice"
@@ -12,7 +12,7 @@ spec:
 apiVersion: "networking.istio.io/v1alpha3"
 kind: "DestinationRule"
 metadata:
-  name: "productcatalogservice-mtls-dr"
+  name: "productcatalogservice-dr"
 spec:
   host: "productcatalogservice.default.svc.cluster.local"
   trafficPolicy:

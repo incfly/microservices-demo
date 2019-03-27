@@ -1,0 +1,37 @@
+apiVersion: "networking.istio.io/v1alpha3"
+kind: "DestinationRule"
+metadata:
+  name: "productcatalogservice-dr"
+spec:
+  host: "productcatalogservice.default.svc.cluster.local"
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+      subjectAltNames:
+      - "spiffe://cluster.local/ns/default/sa/default"
+  subsets:
+  - name: kubernetes-product
+    labels:
+      app: productcatalogservice
+  - name: rawvm-product
+    # This requires changing the labels on ServiceEntry.
+    labels:
+      registry: rawvm
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: productcatalogservice-80-k8s
+spec:
+  hosts:
+    - productcatalogservice.default.svc.cluster.local
+  http:
+  - route:
+    - destination:
+        host: productcatalogservice.default.svc.cluster.local
+        subset: kubernetes-product
+      weight: 80
+    - destination:
+        host: productcatalogservice.default.svc.cluster.local
+        subset: rawvm-product
+      weight: 20

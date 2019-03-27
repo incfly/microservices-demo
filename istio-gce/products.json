@@ -1,0 +1,16 @@
+{
+    "products": [
+        {
+            "id": "OLJCESPC7Z",
+            "name": "Vintage Typewriter",
+            "description": "This typewriter looks good in your living room.",
+            "picture": "/static/img/products/typewriter.jpg",
+            "priceUsd": {
+                "currencyCode": "USD",
+                "units": 67,
+                "nanos": 990000000
+            },
+            "categories": ["vintage"]
+        }
+    ]
+}
