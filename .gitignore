@@ -13,3 +13,5 @@ istio-gce.sh
 tmp/
 *.pem
 cluster.env
+mesh-expansion.env
+server
