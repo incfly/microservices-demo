@@ -17,6 +17,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -41,6 +42,7 @@ import (
 	"go.opencensus.io/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 )
 
@@ -119,7 +121,56 @@ func run(port string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	srv := grpc.NewServer(grpc.StatsHandler(&ocgrpc.ServerHandler{}))
+	cert, err := tls.X509KeyPair(
+		[]byte(`-----BEGIN CERTIFICATE-----
+MIICvDCCAaQCCQDQWsB0wB38PTANBgkqhkiG9w0BAQsFADAgMR4wHAYDVQQDDBVw
+cm9kdWN0Y2F0YWxvZ3NlcnZpY2UwHhcNMTkwODEyMjIyNjE2WhcNMjAwODExMjIy
+NjE2WjAgMR4wHAYDVQQDDBVwcm9kdWN0Y2F0YWxvZ3NlcnZpY2UwggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCvmdIWLQ6biFqDGORQtu7ubw+TvIt+rTwF
+qFkVxsq1fs/nLrM6nK3RbbiM7qUQJFjCPCld/I2o6ZICivlxq2WE6dlA9q5WhOgR
+/yzze0pLHlS+qET7NqWCFSayPg6tzDPbfAA/NJhfpIcg160adeH+sX1Ns5BuPSpr
+u4Q+cw4bScEIbjXWzfl1nvy70AUeOTqJpRA6k84625JEWy7++pla0Bl6m1xwfHqz
+SXAw5raSNEdg/g6454t1FC8I0sTVmKELOdmtgnq02qQb1ktHgHlWUu5n+Xecbo6D
+ELOOxEm1RrffxwduqhzWW9yg5lu9KikI4T1nhqywkkczyn+N7WApAgMBAAEwDQYJ
+KoZIhvcNAQELBQADggEBAEyEY9XAk8cDGu8YqY5kt+4BXxzZMOqe3ZnyRywvLLIK
+6XZJ+UPWiW71ZO5Ow50ji+LIPgqU6mFN0TFJfwZ3Qz8GabtOJpwTDkWbVDAYZK8o
+RTT2lH/+5MmpywglegwAjtYHLXREcbqTe3MvHoUTWrrilTMRPmkVToeqAwdupVWD
+0KFJ8par+ZA+hFii6DSGeGwymZwMHM3x7BfWxQ2uxmZd0C5KF40MJJQlN77+9n9K
+HCPO65OM/QGt6oaORKKuby9+2xlrQ1b+ufKFq2fsduDYIM7JhlhFIvueIF9Zb+2p
+rz2G05xLSPoiZDBLQASMUGTQcHO2D6clPl+/O7QbGzU=
+-----END CERTIFICATE-----`),
+		[]byte(`-----BEGIN RSA PRIVATE KEY-----
+MIIEogIBAAKCAQEAxHav4NFewEKRmrRz+lCDvvRFMA4sj2gM08AGSbcHwBULgjHd
+jBETljKpecq1dFyv2w31G3tWsFP5NFD+IlMUx3DbDUdXiWOV7ynHv8CUnCRAgbWs
+Df1LDtRhZoAg+fk52KQ27OE6a8tjXgIfE/Uue99b7xeK0977KyR0NnUTocReA189
+zuI4YI1ytbQC25mAfIvQMlcqqW52KnXxlMLaHB6v8xdLhOTwrL363cP/f7h+R4nW
+qwu08vsmEaSWwk4wF7hSAjw+WMffv7OANSz2XWip6+UDUDcWoCQwPsTJdnOhd8Tw
+o9yb1kw3T1Ey9gVo9suO/7kWwN1MC2GF5p4TDwIDAQABAoIBADtU3Ki4kjTd5bsi
+5COkTSVN/9cTcMGeWsFYLI32iJCpyl/3T0ENpyylACmX3lTV6QXuoSc7iGKX+Zqj
+GxyimpPgsUbBVN5ZBN7Fb12pezfses6xXtSauiAwY3nhGBRl/+I9NZk0K8CCG/A4
+E8qjMPaX7du28GYr4Q6WY8JOeS9Q5iNSnmnOHpKkRNJlWO3b292NxOTFh4OQNgEI
+uJj5ce68RdqS4Fj14Jt4gtwqmGkqCUJJ+diqX1uUw+2fj6Hf+f3GznYObDvc7o2n
+dBf0zRys5y41UbiQD+/eLTbMs6A8ll2cS9GVEpas0ehQ4J7Yc6oX5bR3N4ZvlEN/
+vOkHdoECgYEAyiOwwugEg9xIUWrtRI8+tfQaKd5IFe1o/uw+SpmEqb2u3vQRECwn
+ZGmY2BMfAMXuCwP0rDb2hXxjvdaWXeKUFA7J8r+lw8GvnHHrJ4/A3z69hxR1rvoy
+F7exPbNsZHutUcVMN5o2doJ7FefQNQDXSf/zk4t5kTLH5BwJkhETV6MCgYEA+M/X
+BTE07j8ceIot3baqjIhRv1YzWH9IzvmGlV5YvqVx05kXRIGi7ysFSW5gb0JZAlDJ
+KS11G4TRXDJRhGSYbgReLM3oMgYcD23IUtvxTVJ75q6A69o9LUQnPZqIEMojWr2c
+0UdPLAFAJyHuj6fenmn3cQzP0b5rJx56GCT0faUCgYA6OS+H5IawaHnYIcF39v6s
+MER8/M6sqjaM/wUuPavtrHo7M/faPa2XCaeBzXgno9teBuSp2icF6f9cxfuHzWSz
+plLa/gLEMPzhRhriyVBXvV2gE++V1/EnzbxatlypUMpqfDbo6R144zqK47ugGL7q
+TLQfMpRwkzzqYn0LOqnkmwKBgD8NbJAESEWX+L8TRUxKXi3+3bh/P8PNfcX1tgVk
+Q1kM1CurQBo8P+4cGNri/c00IxpTHqcwvdyba/LRTZcfZwF6WeNAyvbiVXoTeBCH
+bD8MCBoNXt5mD9rIyqjx4Elg8FSueG8Qgx/DsV45WxtMjz3V3L7pYEDm4ICpWIeF
+1e+BAoGADkkFlsHu4IkOcz1Uqh3yWjorMhEUurdSjXxrEz2soKjzHILqg0GQ+nju
++vsjVslm79Uh+9jRZKDUX/tR7FNbvR1RZZbpvaBO+Xnpm8jxf84UzZYaodgiPUHo
+CEQAnPTZ42NtvFXDeKfN6cyEJ0XIElJExQteJsWd+Q2+RxTubpk=
+-----END RSA PRIVATE KEY-----`))
+	if err != nil {
+		log.Fatal(err)
+	}
+	srv := grpc.NewServer(grpc.StatsHandler(&ocgrpc.ServerHandler{}),
+		grpc.Creds(credentials.NewServerTLSFromCert(&cert)))
 	svc := &productCatalog{}
 	pb.RegisterProductCatalogServiceServer(srv, svc)
 	healthpb.RegisterHealthServer(srv, svc)

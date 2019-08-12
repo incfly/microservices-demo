@@ -17,8 +17,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/credentials"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/profiler"
@@ -252,10 +254,22 @@ func mustMapEnv(target *string, envKey string) {
 
 func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	var err error
-	*conn, err = grpc.DialContext(ctx, addr,
-		grpc.WithInsecure(),
-		grpc.WithTimeout(time.Second*3),
-		grpc.WithStatsHandler(&ocgrpc.ClientHandler{}))
+	if strings.Contains(addr, "productcatalog") {
+		// Create tls based credential.
+		creds, err := credentials.NewClientTLSFromFile("cert.pem", "productcatalogservice")
+		if err != nil {
+			panic(fmt.Errorf("fail with error %v", err))
+		}
+		*conn, err = grpc.DialContext(ctx, addr,
+			grpc.WithTimeout(time.Second*3),
+			grpc.WithStatsHandler(&ocgrpc.ClientHandler{}),
+			grpc.WithTransportCredentials(creds))
+	} else {
+		*conn, err = grpc.DialContext(ctx, addr,
+			grpc.WithInsecure(),
+			grpc.WithTimeout(time.Second*3),
+			grpc.WithStatsHandler(&ocgrpc.ClientHandler{}))
+	}
 	if err != nil {
 		panic(errors.Wrapf(err, "grpc: failed to connect %s", addr))
 	}
