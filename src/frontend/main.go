@@ -17,11 +17,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc/credentials"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"google.golang.org/grpc/credentials"
 
 	"cloud.google.com/go/profiler"
 	"contrib.go.opencensus.io/exporter/stackdriver"
@@ -256,7 +257,7 @@ func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	var err error
 	if strings.Contains(addr, "productcatalog") {
 		// Create tls based credential.
-		creds, err := credentials.NewClientTLSFromFile("cert.pem", "productcatalogservice")
+		creds, err := credentials.NewClientTLSFromFile("/root-cert.pem", "productcatalogservice")
 		if err != nil {
 			panic(fmt.Errorf("fail with error %v", err))
 		}

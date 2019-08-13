@@ -19,6 +19,6 @@ WORKDIR /frontend
 COPY --from=builder /go/bin/frontend /frontend/server
 COPY ./templates ./templates
 COPY ./static ./static
-COPY ./productcatalog-cert.pem /productcatalog-cert.pem
+COPY ./root-cert.pem /root-cert.pem
 EXPOSE 8080
 ENTRYPOINT ["/frontend/server"]
